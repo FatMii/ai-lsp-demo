@@ -1,0 +1,19 @@
+{
+  "name": "ai-lsp-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "demo": "node client.js",
+    "server": "npx tsx server.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "openai": "^4.76.0",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
