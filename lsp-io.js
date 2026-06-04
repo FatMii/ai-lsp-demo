@@ -34,8 +34,11 @@ function decodeMessages(buffer, onMessage) {
  */
 export function startLanguageServer(projectRoot) {
   const serverPath = path.join(projectRoot, "server.ts");
+  // proc：ChildProcess，用 spawn 拉起的语言服务子进程（实际跑的是 server.ts）
+  // client 经 proc.stdin 发 LSP 请求，从 proc.stdout 读 JSON-RPC 回复；close() 时 proc.kill() 结束子进程
   const proc = spawn("npx", ["tsx", serverPath, "--stdio"], {
     cwd: projectRoot,
+    // stdin/stdout 设为 pipe，才能在本进程里读写；stderr 继承到终端便于看 server 日志
     stdio: ["pipe", "pipe", "inherit"],
     env: process.env,
     shell: true,
@@ -45,6 +48,7 @@ export function startLanguageServer(projectRoot) {
   const pending = new Map();
   let readBuffer = Buffer.alloc(0);
 
+  // 子进程 stdout 上收到的是带 Content-Length 头的 LSP 报文
   proc.stdout.on("data", (chunk) => {
     readBuffer = decodeMessages(Buffer.concat([readBuffer, chunk]), (msg) => {
       if (msg.id == null || !pending.has(msg.id)) return;
@@ -55,6 +59,7 @@ export function startLanguageServer(projectRoot) {
     });
   });
 
+  // 写入子进程 stdin，即发给 server.ts 的 LSP 消息
   const send = (payload) => proc.stdin.write(encodeMessage(payload));
 
   return {
@@ -83,7 +88,7 @@ export function startLanguageServer(projectRoot) {
     },
 
     close() {
-      proc.kill();
+      proc.kill(); // 演示结束，关掉语言服务子进程
     },
   };
 }
